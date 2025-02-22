@@ -2,38 +2,62 @@ package com.bankmgmt.app.rest;
 
 import com.bankmgmt.app.entity.Account;
 import com.bankmgmt.app.service.BankService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-// TODO: Make this class a Rest Controller
+@RestController
+@RequestMapping("/bank_management/v1/accounts")
 public class BankController {
 
-    // TODO Autowired the BankService class
-    private BankService bankService;
+    private final BankService bankService;
 
-    // TODO: API to Create a new account
-    
+    public BankController(BankService bankService) {
+        this.bankService = bankService;
+    }
 
-    // TODO: API to Get all accounts
-    
+    @PostMapping
+    public ResponseEntity<Account> createAccount(@RequestBody Account account) {
+        return ResponseEntity.ok(bankService.createAccount(account));
+    }
 
-    // TODO: API to Get an account by ID
-    
+    @GetMapping
+    public ResponseEntity<List<Account>> getAllAccounts() {
+        return ResponseEntity.ok(bankService.getAllAccounts());
+    }
 
-    // TODO: API to Deposit money
-    
+    @GetMapping("/{id}")
+    public ResponseEntity<Account> getAccountById(@PathVariable int id) {
+        return bankService.getAccountById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-    // TODO: API to Withdraw money
-    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAccount(@PathVariable int id) {
+        return bankService.deleteAccount(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
 
-    // TODO: API to Transfer money between accounts
-    
+    @PostMapping("/{id}/deposit")
+    public ResponseEntity<Account> deposit(@PathVariable int id, @RequestParam double amount) {
+        return bankService.deposit(id, amount)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.badRequest().build());
+    }
 
-    // TODO: API to Delete an account
-    
-    
+    @PostMapping("/{id}/withdraw")
+    public ResponseEntity<Account> withdraw(@PathVariable int id, @RequestParam double amount) {
+        return bankService.withdraw(id, amount)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.badRequest().build());
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<String> transfer(@RequestParam int fromId, @RequestParam int toId, @RequestParam double amount) {
+        return bankService.transfer(fromId, toId, amount)
+                ? ResponseEntity.ok("Transfer successful")
+                : ResponseEntity.badRequest().body("Transfer failed: insufficient funds or invalid accounts");
+    }
 }
